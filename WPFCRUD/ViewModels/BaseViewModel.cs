@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using PropertyChanged;
-using WPFCRUD.Annotations;
+using WPFCRUD.Properties;
 
 namespace WPFCRUD.ViewModels {
     [AddINotifyPropertyChangedInterface]

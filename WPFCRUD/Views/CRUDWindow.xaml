@@ -31,6 +31,10 @@
                     <b:InvokeCommandAction Command="{Binding ResizeListView}"
                                            CommandParameter="{Binding ElementName=ListViewUsers}" />
                 </b:EventTrigger>
+                <b:EventTrigger EventName="MouseDoubleClick">
+                    <b:InvokeCommandAction Command="{Binding ChangeUserCommand}"
+                                           CommandParameter="{Binding ElementName=ListViewUsers, Path=SelectedItem}" />
+                </b:EventTrigger>
             </b:Interaction.Triggers>
 
             <ListView.View>

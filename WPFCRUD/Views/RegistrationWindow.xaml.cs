@@ -1,17 +1,14 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using WPFCRUD.Models;
 
 namespace WPFCRUD.Views {
     /// <summary>
-    /// Interaction logic for EditingWindow.xaml
+    /// Interaction logic for RegistrationWindow.xaml
     /// </summary>
-    public partial class EditingWindow : Window {
-        public static EditingWindow Instance;
-        public User CurrentUser;
+    public partial class RegistrationWindow : Window {
+        public static RegistrationWindow Instance;
 
-        public EditingWindow(User user) {
-            CurrentUser = user;
+        public RegistrationWindow() {
             Instance = this;
             InitializeComponent();
             TbPassword.LostFocus += VmMainWindow.TbPassword_OnLostFocus;

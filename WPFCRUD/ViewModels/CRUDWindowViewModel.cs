@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Registration.View;
 using WPFCRUD.Models;
 using WPFCRUD.Views;
 

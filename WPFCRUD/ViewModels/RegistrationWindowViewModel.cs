@@ -7,12 +7,13 @@ using Database;
 using WPFCRUD.Views;
 
 namespace WPFCRUD.ViewModels {
-    public class EditingWindowViewModel : BaseViewModel {
-        private readonly string _initialLogin;
-        private readonly DateTime _initialRegistrationDate;
-
+    public class RegistrationWindowViewModel : BaseViewModel {
         private readonly DatabaseInteraction _database;
-        private readonly EditingWindow _parentWindow;
+        private readonly RegistrationWindow _parentWindow;
+
+        private string _tbLoginText;
+        private string _imgPasswordStrengthPath;
+        private Visibility _imgPasswordVisibility;
 
         private readonly Dictionary<int, string> _imgStrengthPaths = new Dictionary<int, string> {
             {0, "../Images/PasswordStrength0.png"},
@@ -21,8 +22,6 @@ namespace WPFCRUD.ViewModels {
             {3, "../Images/PasswordStrength3.png"},
             {4, "../Images/PasswordStrength4.png"}
         };
-
-        private string _tbLoginText;
 
         public string TbLoginText {
             get => _tbLoginText;
@@ -33,13 +32,25 @@ namespace WPFCRUD.ViewModels {
             }
         }
 
-        public string ImgPasswordStrengthPath { get; set; }
+        public string ImgPasswordStrengthPath {
+            get => _imgPasswordStrengthPath;
+            set {
+                _imgPasswordStrengthPath = value;
+                OnPropertyChanged(nameof(ImgPasswordStrengthPath));
+            }
+        }
 
-        public Visibility ImgPasswordVisibility { get; set; }
+        public Visibility ImgPasswordVisibility {
+            get => _imgPasswordVisibility;
+            set {
+                _imgPasswordVisibility = value;
+                OnPropertyChanged(nameof(ImgPasswordVisibility));
+            }
+        }
 
-        public DateTime RegistrationDate { get; set; }
+        public DateTime RegistrationDate { get; set; } = DateTime.Now;
 
-        public EditingWindowViewModel() {
+        public RegistrationWindowViewModel() {
             try {
                 _database = new DatabaseInteraction();
             } catch (Npgsql.PostgresException e) {
@@ -47,14 +58,9 @@ namespace WPFCRUD.ViewModels {
                 throw;
             }
 
-            _parentWindow = EditingWindow.Instance;
+            _parentWindow = RegistrationWindow.Instance;
 
-            _initialLogin = _parentWindow.CurrentUser.Login;
-            _initialRegistrationDate = DateTime.Parse(_parentWindow.CurrentUser.RegistrationDate);
-            TbLoginText = _initialLogin;
-            RegistrationDate = _initialRegistrationDate;
-
-            ChangeUserCommand = new DelegateCommand(ChangeUser, CanChangeUser);
+            RegisterUserCommand = new DelegateCommand(RegisterUser, CanRegisterUser);
             _database.PasswordStrengthChanged += (type, o) => {
                 if (type == EventStringTypes.PasswordStrengthIndex) {
                     ImgPasswordStrengthPath = _imgStrengthPaths[(int) o];
@@ -64,13 +70,13 @@ namespace WPFCRUD.ViewModels {
             _database.ErrorInfoChanged += (type, o) => {
                 switch (type) {
                     case EventStringTypes.Login:
-                        ((ErrorProviderViewModel) _parentWindow.TbLogin.DataContext).ErrorName =
-                            _tbLoginText != _initialLogin ? o as string : string.Empty;
+                        ((ErrorProviderViewModel) _parentWindow.TbLogin.DataContext).ErrorName = o as string;
                         break;
                     case EventStringTypes.Password:
                         ((ErrorProviderViewModel) _parentWindow.TbPassword.DataContext).ErrorName = o as string;
                         break;
                 }
+
                 CommandManager.InvalidateRequerySuggested();
             };
         }
@@ -87,37 +93,28 @@ namespace WPFCRUD.ViewModels {
             }
         }
 
-        public ICommand ChangeUserCommand { get; }
+        public ICommand RegisterUserCommand { get; }
 
-        private void ChangeUser(object sender) {
+        private void RegisterUser(object sender) {
             _database.CheckLoginTimer(_tbLoginText);
-            if (!CanChangeUser(sender))
+            if (!CanRegisterUser(sender))
                 return;
 
             try {
-                long id = _parentWindow.CurrentUser.Id;
-                bool passwordChanged = !string.IsNullOrEmpty(_parentWindow.TbPassword.Password);
-                string password = passwordChanged
-                    ? _parentWindow.TbPassword.Password
-                    : _parentWindow.CurrentUser.Password;
-                if (_database.ChangeUser(id, TbLoginText, password, passwordChanged, RegistrationDate)) {
-                    MessageBox.Show(_parentWindow, "Пользователь успешно изменён!", "Уведомление");
-                    _parentWindow.Close();
-                } else {
-                    MessageBox.Show( _parentWindow,"Ошибка, некорректные данные. Запрос на изменение отклонён!", "Уведомление");
-                }
+                MessageBox.Show(_database.RegisterUser(TbLoginText, _parentWindow.TbPassword.Password)
+                                    ? "Вы успешно зарегистрированы!"
+                                    : "Ошибка, некорректные данные. Запрос на регистрацию отклонён!", "Уведомление");
+                _database.CheckLoginTimer(_tbLoginText);
             } catch (Npgsql.PostgresException e) {
                 MessageBox.Show(e.Message);
             }
         }
 
-        private bool CanChangeUser(object sender) {
+        private bool CanRegisterUser(object sender) {
             var tbLoginEp = (ErrorProviderViewModel) _parentWindow.TbLogin.DataContext;
             var tbPasswordEp = (ErrorProviderViewModel) _parentWindow.TbPassword.DataContext;
             return string.IsNullOrEmpty(tbLoginEp.ErrorName) && string.IsNullOrEmpty(tbPasswordEp.ErrorName) &&
-                   !string.IsNullOrEmpty(TbLoginText) &&
-                   (_initialLogin != TbLoginText || !string.IsNullOrEmpty(_parentWindow.TbPassword.Password) ||
-                    _initialRegistrationDate != RegistrationDate);
+                   !string.IsNullOrEmpty(TbLoginText) && !string.IsNullOrEmpty(_parentWindow.TbPassword.Password);
         }
     }
 }

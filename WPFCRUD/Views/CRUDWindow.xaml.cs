@@ -1,7 +1,4 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using WPFCRUD.ViewModels;
 
 namespace WPFCRUD.Views {
     /// <summary>
