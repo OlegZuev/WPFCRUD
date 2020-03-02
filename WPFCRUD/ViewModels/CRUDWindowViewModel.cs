@@ -7,21 +7,13 @@ using WPFCRUD.Views;
 
 namespace WPFCRUD.ViewModels {
     public class CRUDWindowViewModel : BaseViewModel {
-        private RegistrationWindow _regWindow = new RegistrationWindow {Owner = CRUDWindow.Instance};
-
-        private EditingWindow _editWindow = new EditingWindow(new User(-1, "", "", DateTime.Now.ToLongDateString()))
-            {Owner = CRUDWindow.Instance};
-
         public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
 
         public CRUDWindowViewModel() {
             DatabaseInteraction.InitializeToUsers(Users);
-            _regWindow.Close();
-            _editWindow.Close();
 
             AddUserCommand = new DelegateCommand<object>(sender => {
-                _regWindow = new RegistrationWindow {Owner = CRUDWindow.Instance};
-                _regWindow.ShowDialog();
+                new ModifyingWindow(new RegistrationWindowViewModel()).ShowDialog();
             });
 
             ResizeListView = new DelegateCommand<ListView>(sender => {
@@ -38,8 +30,7 @@ namespace WPFCRUD.ViewModels {
             Database.DatabaseInteraction.NewUserAdded += id => { DatabaseInteraction.ShowNewUser(Users, id); };
 
             ChangeUserCommand = new DelegateCommand<User>(currentUser => {
-                _editWindow = new EditingWindow(currentUser) {Owner = CRUDWindow.Instance};
-                _editWindow.ShowDialog();
+                new ModifyingWindow(new EditingWindowViewModel(currentUser)).ShowDialog();
             }, currentUser => currentUser != null);
 
             Database.DatabaseInteraction.SomeUserChanged += id => {

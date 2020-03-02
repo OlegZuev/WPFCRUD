@@ -7,33 +7,19 @@ namespace WPFCRUD.ViewModels {
             get => _errorName;
             set {
                 _errorName = value;
-                if (value == "") {
+                if (value == string.Empty) {
                     ToolTipNameEnable = false;
-                    BorderTbName = Brushes.Gray;
+                    BorderColor = Brushes.Gray;
                 } else {
                     ToolTipNameEnable = true;
-                    BorderTbName = Brushes.Red;
+                    BorderColor = Brushes.Red;
                 }
                 OnPropertyChanged(nameof(ErrorName));
             }
         }
 
-        private Brush _borderTbName;
-        public Brush BorderTbName {
-            get => _borderTbName;
-            set {
-                _borderTbName = value;
-                OnPropertyChanged(nameof(BorderTbName));
-            }
-        }
+        public Brush BorderColor { get; set; }
 
-        private bool _toolTipNameEnable;
-        public bool ToolTipNameEnable {
-            get => _toolTipNameEnable;
-            set {
-                _toolTipNameEnable = value;
-                OnPropertyChanged(nameof(ToolTipNameEnable));
-            }
-        }
+        public bool ToolTipNameEnable { get; set; }
     }
 }

@@ -4,120 +4,66 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Database;
+using WPFCRUD.Models;
 using WPFCRUD.Views;
 
 namespace WPFCRUD.ViewModels {
-    public class EditingWindowViewModel : BaseViewModel {
-        private readonly string _initialLogin;
-        private readonly DateTime _initialRegistrationDate;
+    public class EditingWindowViewModel : ModifyingWindowViewModel {
+        private readonly User _initialUser;
 
-        private readonly DatabaseInteraction _database;
-        private readonly EditingWindow _parentWindow;
+        public override string WindowTitle { get; } = "Форма редактирования";
 
-        private readonly Dictionary<int, string> _imgStrengthPaths = new Dictionary<int, string> {
-            {0, "../Images/PasswordStrength0.png"},
-            {1, "../Images/PasswordStrength1.png"},
-            {2, "../Images/PasswordStrength2.png"},
-            {3, "../Images/PasswordStrength3.png"},
-            {4, "../Images/PasswordStrength4.png"}
-        };
+        public override string ModifyUserCommandTitle { get; } = "Изменить";
 
-        private string _tbLoginText;
+        public EditingWindowViewModel(User user) {
+            _initialUser = user;
+            TbLoginText = _initialUser.Login;
+            RegistrationDate = DateTime.Parse(_initialUser.RegistrationDate);
 
-        public string TbLoginText {
-            get => _tbLoginText;
-            set {
-                _tbLoginText = value;
-                _database.CheckLogin(_tbLoginText);
-                OnPropertyChanged(nameof(TbLoginText));
-            }
-        }
+            ModifyUserCommand = new DelegateCommand<PasswordBox>(ChangeUser, CanChangeUser);
 
-        public string ImgPasswordStrengthPath { get; set; }
-
-        public Visibility ImgPasswordVisibility { get; set; }
-
-        public DateTime RegistrationDate { get; set; }
-
-        public EditingWindowViewModel() {
-            try {
-                _database = new DatabaseInteraction();
-            } catch (Npgsql.PostgresException e) {
-                MessageBox.Show(e.Message);
-                throw;
-            }
-
-            _parentWindow = EditingWindow.Instance;
-
-            _initialLogin = _parentWindow.CurrentUser.Login;
-            _initialRegistrationDate = DateTime.Parse(_parentWindow.CurrentUser.RegistrationDate);
-            TbLoginText = _initialLogin;
-            RegistrationDate = _initialRegistrationDate;
-
-            ChangeUserCommand = new DelegateCommand(ChangeUser, CanChangeUser);
-            _database.PasswordStrengthChanged += (type, o) => {
-                if (type == EventStringTypes.PasswordStrengthIndex) {
-                    ImgPasswordStrengthPath = _imgStrengthPaths[(int) o];
-                }
-            };
-
-            _database.ErrorInfoChanged += (type, o) => {
+            DatabaseInstance.ErrorInfoChanged += (type, o) => {
                 switch (type) {
                     case EventStringTypes.Login:
-                        ((ErrorProviderViewModel) _parentWindow.TbLogin.DataContext).ErrorName =
-                            _tbLoginText != _initialLogin ? o as string : string.Empty;
+                        LoginErrorProvider.ErrorName = TbLoginText != _initialUser.Login ? o as string : string.Empty;
                         break;
                     case EventStringTypes.Password:
-                        ((ErrorProviderViewModel) _parentWindow.TbPassword.DataContext).ErrorName = o as string;
+                        PasswordErrorProvider.ErrorName = o as string;
                         break;
                 }
                 CommandManager.InvalidateRequerySuggested();
             };
         }
 
-        public void TbPassword_OnLostFocus(object sender, RoutedEventArgs e) {
-            ImgPasswordVisibility = Visibility.Hidden;
-        }
+        public sealed override ICommand ModifyUserCommand { get; protected set; }
 
-        public void TbPassword_OnPasswordChanged(object sender, RoutedEventArgs e) {
-            _database.CheckPassword(((PasswordBox) sender).Password);
-
-            if (ImgPasswordVisibility != Visibility.Visible) {
-                ImgPasswordVisibility = Visibility.Visible;
-            }
-        }
-
-        public ICommand ChangeUserCommand { get; }
-
-        private void ChangeUser(object sender) {
-            _database.CheckLoginTimer(_tbLoginText);
+        private void ChangeUser(PasswordBox sender) {
+            DatabaseInstance.CheckLoginTimer(TbLoginText);
             if (!CanChangeUser(sender))
                 return;
 
             try {
-                long id = _parentWindow.CurrentUser.Id;
-                bool passwordChanged = !string.IsNullOrEmpty(_parentWindow.TbPassword.Password);
+                long id = _initialUser.Id;
+                bool passwordChanged = !string.IsNullOrEmpty(sender.Password);
                 string password = passwordChanged
-                    ? _parentWindow.TbPassword.Password
-                    : _parentWindow.CurrentUser.Password;
-                if (_database.ChangeUser(id, TbLoginText, password, passwordChanged, RegistrationDate)) {
-                    MessageBox.Show(_parentWindow, "Пользователь успешно изменён!", "Уведомление");
-                    _parentWindow.Close();
+                    ? sender.Password
+                    : _initialUser.Password;
+                if (DatabaseInstance.ChangeUser(id, TbLoginText, password, passwordChanged, RegistrationDate)) {
+                    MessageBox.Show("Пользователь успешно изменён!", "Уведомление");
+                    CloseAction();
                 } else {
-                    MessageBox.Show( _parentWindow,"Ошибка, некорректные данные. Запрос на изменение отклонён!", "Уведомление");
+                    MessageBox.Show("Ошибка, некорректные данные. Запрос на изменение отклонён!", "Уведомление");
                 }
             } catch (Npgsql.PostgresException e) {
                 MessageBox.Show(e.Message);
             }
         }
 
-        private bool CanChangeUser(object sender) {
-            var tbLoginEp = (ErrorProviderViewModel) _parentWindow.TbLogin.DataContext;
-            var tbPasswordEp = (ErrorProviderViewModel) _parentWindow.TbPassword.DataContext;
-            return string.IsNullOrEmpty(tbLoginEp.ErrorName) && string.IsNullOrEmpty(tbPasswordEp.ErrorName) &&
+        private bool CanChangeUser(PasswordBox sender) {
+            return string.IsNullOrEmpty(LoginErrorProvider.ErrorName) && string.IsNullOrEmpty(PasswordErrorProvider.ErrorName) &&
                    !string.IsNullOrEmpty(TbLoginText) &&
-                   (_initialLogin != TbLoginText || !string.IsNullOrEmpty(_parentWindow.TbPassword.Password) ||
-                    _initialRegistrationDate != RegistrationDate);
+                   (_initialUser.Login != TbLoginText || !string.IsNullOrEmpty(sender.Password) ||
+                    DateTime.Parse(_initialUser.RegistrationDate) != RegistrationDate);
         }
     }
 }

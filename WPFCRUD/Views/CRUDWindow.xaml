@@ -8,10 +8,7 @@
         xmlns:viewModels="clr-namespace:WPFCRUD.ViewModels"
         SizeToContent="Width"
         mc:Ignorable="d"
-        Title="Работа с БД пользователей" Height="450">
-    <Window.DataContext>
-        <viewModels:CRUDWindowViewModel />
-    </Window.DataContext>
+        Title="Работа с БД пользователей" Height="450" d:DataContext="{d:DesignInstance viewModels:CRUDWindowViewModel}">
     <StackPanel>
 
         <Menu>

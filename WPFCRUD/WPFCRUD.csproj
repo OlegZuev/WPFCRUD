@@ -113,12 +113,10 @@
     <Compile Include="Models\NullImageConverter.cs" />
     <Compile Include="ViewModels\EditingWindowViewModel.cs" />
     <Compile Include="ViewModels\ErrorProviderViewModel.cs" />
+    <Compile Include="ViewModels\ModifyingWindowViewModel.cs" />
     <Compile Include="ViewModels\RegistrationWindowViewModel.cs" />
-    <Compile Include="Views\EditingWindow.xaml.cs">
-      <DependentUpon>EditingWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\RegistrationWindow.xaml.cs">
-      <DependentUpon>RegistrationWindow.xaml</DependentUpon>
+    <Compile Include="Views\ModifyingWindow.xaml.cs">
+      <DependentUpon>ModifyingWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\CRUDWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -143,13 +141,9 @@
       <DependentUpon>CRUDWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\EditingWindow.xaml">
+    <Page Include="Views\ModifyingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\RegistrationWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
