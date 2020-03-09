@@ -38,7 +38,7 @@ namespace WPFCRUD.ViewModels {
                 return;
 
             try {
-                MessageBox.Show(DatabaseInstance.RegisterUser(TbLoginText, sender.Password)
+                MessageBox.Show(DatabaseInstance.RegisterUser(TbLoginText, sender.Password, RegistrationDate)
                                     ? "Вы успешно зарегистрированы!"
                                     : "Ошибка, некорректные данные. Запрос на регистрацию отклонён!", "Уведомление");
                 DatabaseInstance.CheckLoginTimer(TbLoginText);
